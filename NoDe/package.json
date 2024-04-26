@@ -1,0 +1,21 @@
+{
+  "name": "playlist-transfer",
+  "version": "1.0.0",
+  "description": "transfer playlists from diff music streaming services",
+  "main": "main.js",
+  "scripts": {
+    "start": "nodemon main.js"
+  },
+  "author": "tio ib",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.6.8",
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-session": "^1.18.0",
+    "googleapis": "^134.0.0",
+    "mongoose": "^8.3.2"
+  }
+}
