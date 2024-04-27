@@ -44,7 +44,7 @@ function LoginButton(props)
                 if(props.which) clearInterval(interval);
                 setInsideButton(<FontAwesomeIcon icon="fa-solid fa-check" />);
         }
-    },[loginState])
+    },[loginState, props.which])
 
     return(
         <div>
