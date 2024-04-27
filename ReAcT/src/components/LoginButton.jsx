@@ -1,4 +1,4 @@
-import React, {Suspense} from 'react';
+import React from 'react';
 import { useState, useEffect } from 'react';
 
 import { Button, Spinner } from '@radix-ui/themes';
@@ -47,7 +47,7 @@ function LoginButton(props)
     },[loginState])
 
     return(
-        <Suspense fallback={<Spinner />}>
+        <div>
             {
             props.which ?
                 <Button onClick={handleLogin} disabled={loginState === 2} color='red'>
@@ -58,7 +58,7 @@ function LoginButton(props)
                     {insideButton}
                 </Button>
             }
-        </Suspense>
+        </div>
     )
 }
 
