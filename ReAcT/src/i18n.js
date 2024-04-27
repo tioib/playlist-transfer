@@ -22,21 +22,11 @@ i18n
 
     resources: {
       en: {
-        loginSpotify: {
-            sIdle: "LOGIN SPOTIFY"
-        },
-        loginYoutube: {
-            ytIdle: "LOGIN YOUTUBE"
-        }
+        
       },
 
       es: {
-        loginSpotify: {
-            idle: "LOGIN EN SPOTIFY"
-        },
-        loginYoutube: {
-            idle: "LOGIN EN YOUTUBE"
-        }
+        
       }
     }
   });

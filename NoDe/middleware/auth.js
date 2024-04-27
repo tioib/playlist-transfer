@@ -99,11 +99,12 @@ exports.sendYoutubeLink = async (req, res) =>
     {
         const tokens = await refreshYoutube(req);
         req.session.ytInterval = setInterval(()=>req.session.ytToken = "",(tokens.expires_in - 60)*1000);
+        res.status(204);
     }
     else
     //this should be the right way to send it but google is a bitch
     //res.json(sendYoutubeLinkButCorrectly());
-    res.json(ytLink);
+    res.status(200).json(ytLink);
 }
 
 exports.sendSpotifyLink = async (req, res) =>
@@ -112,8 +113,9 @@ exports.sendSpotifyLink = async (req, res) =>
     {
         const tokens = await refreshSpotify(req);
         req.session.sInterval = setInterval(()=>req.session.sToken = "",(tokens.expires_in - 60)*1000);
+        res.status(204);
     }
-    else res.json(sLink)
+    else res.status(200).json(sLink);
 }
 
 exports.setYoutubeToken = async (req, res) =>
