@@ -1,6 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import HomePage from './pages/HomePage';
+import PanelPage from "./pages/PanelPage";
 import UserRoutes from "./protected/UserRoutes";
 
 
@@ -10,7 +11,7 @@ function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route element={<UserRoutes/>}>
-          <Route path="/panel" /*element={<PanelPage />}*/ />
+          <Route path="/panel" element={<PanelPage />} />
         </Route>
       </Routes>
     </AuthProvider>
