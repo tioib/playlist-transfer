@@ -22,11 +22,15 @@ i18n
 
     resources: {
       en: {
-        
+        translation: {
+          homePageTitle: "Transfer playlists between YouTube and Spotify",
+        }
       },
 
       es: {
-        
+        translation: {
+          homePageTitle: "Transfiere playlists entre YouTube y Spotify",
+        }
       }
     }
   });

@@ -3,14 +3,15 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Button, Spinner } from '@radix-ui/themes';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
-import { useNavigate } from "react-router-dom";
+import {faYoutube, faSpotify} from '@fortawesome/free-brands-svg-icons';
+import {faCheck} from '@fortawesome/free-solid-svg-icons'
 
 function LoginButton(props)
 {
     const [insideButton, setInsideButton] = useState(<></>);
     const [loginState, setLoginState] = useState(0);
-    const {loginYoutube, loginSpotify, confirmed, login} = useAuth();
-    const navigate = useNavigate();
+    const [loading, setLoading] = useState(false);
+    const {loginYoutube, loginSpotify, login} = useAuth();
 
     async function handleLogin()
     {
@@ -19,31 +20,26 @@ function LoginButton(props)
             setLoginState(1);
             const result = await login(props.which);
             if(result) console.log(result);
-            else setLoginState(0);
         }
     }
     
     useEffect(function()
     {
-        if(loginState === 0) setInsideButton( <div><FontAwesomeIcon icon={"fa-brands " + (props.which ? "fa-youtube" : "fa-spotify")} /> {props.which ? "LOGIN YOUTUBE" : "LOGIN SPOTIFY"}</div> );
+        if(loginState === 0) setInsideButton( <div><FontAwesomeIcon icon={props.which ? faYoutube : faSpotify} /> LOGIN</div> );
         else setInsideButton(<Spinner/>);
-        
-        if((props.which && loginYoutube) || (!props.which && loginSpotify)) setInsideButton(<FontAwesomeIcon icon="fa-solid fa-check" />);
-        
-        if(confirmed) navigate("/panel");
-        
-    },[loginState, loginSpotify, loginYoutube, confirmed, props.which])
+
+    },[loginState, props.which])
 
     return(
         <div>
             {
             props.which ?
-                <Button onClick={handleLogin} disabled={loginState !== 0} color='red'>
-                    {insideButton}
+                <Button onClick={handleLogin} color='red'>
+                    {loginYoutube ? <FontAwesomeIcon icon={faCheck} /> : insideButton}
                 </Button>
             :
-                <Button onClick={handleLogin} disabled={loginState !== 0} color='green'>
-                    {insideButton}
+                <Button onClick={handleLogin} color='green'>
+                    {loginSpotify ? <FontAwesomeIcon icon={faCheck} /> : insideButton}
                 </Button>
             }
         </div>

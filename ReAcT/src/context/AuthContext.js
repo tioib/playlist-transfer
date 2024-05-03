@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import { createContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -18,37 +18,54 @@ export const AuthProvider = ({children}) =>
     const [loginYoutube, setLoginYoutube] = useState(false);
     const [loginSpotify, setLoginSpotify] = useState(false);
     const [confirmed, setConfirmed] = useState(false);
+    const [ytInterval, setYtInterval] = useState("");
+    const [sInterval, setSInterval] = useState("");
 
-    async function check()
+    useEffect(function()
     {
-        return axios.get(BASE_URL+"confirm")
-        .then(function(response)
+        if(loginYoutube)
         {
-            if(response.status === 200) setConfirmed(true);
-        });
-        
-    }
+            clearInterval(ytInterval);
+            if(loginSpotify) navigate("/panel");
+        }
+
+        if(loginSpotify)
+        {
+            clearInterval(sInterval);
+            if(loginYoutube) navigate("/panel");
+        }
+    },[loginYoutube,loginSpotify]);
 
     const login = async (which) =>
     {
-        let response = await axios.get(BASE_URL + which ? "yt/generate" : "s/generate");
+        let response = await axios.get(BASE_URL + (which ? "yt/generate" : "s/generate"));
             
-        if(response.status === 200)
+        if(response.data)
         {
-            console.log(response.data);
             window.open(response.data, "_blank");
-            if(which)
+            if(which) setYtInterval(setInterval(async () => 
             {
-                setLoginYoutube(true);
-                if(loginSpotify)
-                    check();
-            }
-            else
+                axios.get(BASE_URL + "yt/confirm")
+                .then(function(res)
+                {
+                    if(res.status === 200)
+                    {
+                        console.log(res);
+                        setLoginYoutube(true);
+                    }
+                });
+            }, 2000));
+            else setSInterval(setInterval(async () => 
             {
-                setLoginSpotify(true);
-                if(loginYoutube)
-                    check();
-            }
+                axios.get(BASE_URL + (which ? "yt/confirm" : "s/confirm"))
+                .then(function(res)
+                {
+                    if(res.status === 200)
+                    {
+                        setLoginSpotify(true);
+                    }
+                });
+            }, 2000));
 
             return false;
         }

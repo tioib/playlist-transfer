@@ -2,9 +2,9 @@ import { Outlet, Navigate } from 'react-router-dom'
 import { useAuth } from "../context/AuthContext";
 
 const UserRoutes = () => {
-  const {confirmed} = useAuth();
+  const {loginSpotify, loginYoutube} = useAuth();
     
-  if(confirmed) return(<Outlet/>);
+  if(loginSpotify && loginYoutube) return(<Outlet/>);
   return(<Navigate to="/"/>);
 }
 

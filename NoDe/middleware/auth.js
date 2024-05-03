@@ -1,3 +1,6 @@
+//TODO: HOW THE FUCK DO YOU REDIRECT/CLOSE PAGE AFTER SAVING TOKEN?????????? SEND(WINDOW.CLOSE)/REDIRECT(URL) GIVE CIRCULAR JSON ERROR
+//      if user loged in with youtube and then with spotify in another session, mongo saves two users. delete first user in mongo if it finds two users with the same id
+
 require('dotenv').config({path: '../.env'});
 
 const ytId = process.env.YT_ID, ytSecret = process.env.YT_SECRET, ytRedirect = process.env.YT_REDIRECT;
@@ -49,8 +52,8 @@ exports.refreshYoutube = async function(req)
         axios.post(
             "https://oauth2.googleapis.com/token",
             {
-                client_id: clientId,
-                client_secret: clientSecret,
+                client_id: ytId,
+                client_secret: ytSecret,
                 grant_type: "refresh_token",
                 refresh_token: req.session.user.yt_refresh
             }
@@ -127,9 +130,9 @@ exports.setYoutubeToken = async (req, res) =>
             {
                 grant_type: 'authorization_code',
                 code: req.query.code,
-                client_id: clientId,
-                client_secret: clientSecret,
-                redirect_uri: redirect
+                client_id: ytId,
+                client_secret: ytSecret,
+                redirect_uri: ytRedirect
             }).then((response)=>
             {
                 const tokens = response.data;
@@ -151,17 +154,26 @@ exports.setYoutubeToken = async (req, res) =>
                     else 
                     {  
                         user = await User.getUserFromYtId(response.data.items[0].id); //search for user with yt id
-                        if(Object.keys(user).length == 0) user = await User.createUser( //condition means it's the first time the user logs in, so create user
+                        if(Object.keys(user).length === 0)
                         {
-                            yt_id: req.session.ytId, 
-                            yt_refresh: tokens.refresh_token
-                        });
-                        else user.yt_refresh = tokens.refresh_token; //else save new refresh token
-                        await user.save();
+                            user = await User.createUser( //condition means it's the first time the user logs in, so create user
+                            {
+                                yt_id: response.data.items[0].id, 
+                                yt_refresh: tokens.refresh_token
+                            });
+                            await user.save();
+                        }
+                        else
+                        {
+                            user[0].yt_refresh = tokens.refresh_token; //else save new refresh token
+                            await user[0].save();
+                        }
                     }    
                     req.session.ytToken = tokens.access_token;
                     req.session.user = user;
                     req.session.ytInterval = setInterval(()=>req.session.ytToken = "",(tokens.expires_in - 60)*1000);
+
+                    //res.redirect("<script>window.close();</script>");
                 })
         })
     }catch(error){console.log(error);res.send(error)}
@@ -170,30 +182,32 @@ exports.setYoutubeToken = async (req, res) =>
 exports.setSpotifyToken = async (req,res) =>
 {
     try{
-        if(req.query.code) axios.post(
+        console.log(req.query.code);
+      
+         axios.post(
             "https://accounts.spotify.com/api/token",
             {
                 code: req.query.code,
-                redirect: sRedirect,
+                redirect_uri: sRedirect,
                 grant_type: 'authorization_code'
             },
             {
                 headers:{
                     'content-type': 'application/x-www-form-urlencoded',
-                    'Authorization': 'Basic ' + (new Buffer.from(client_id + ':' + client_secret).toString('base64'))
+                    'Authorization': 'Basic ' + (new Buffer.from(sId + ':' + sSecret).toString('base64'))
                 }
             }
         ).then(async function(response)
         {
             const tokens = response.data;
-            axios.get("https://api.spotify.com/v1/me",{},
+
+            axios.get("https://api.spotify.com/v1/me",
             {
                 headers: {
                     Authorization: 'Bearer '+response.data.access_token
                 }
             }).then(async (response)=>
                 {
-                
                     if(req.session.ytToken)
                     {
                         if(!session.user.sId)
@@ -207,24 +221,35 @@ exports.setSpotifyToken = async (req,res) =>
                         user = await User.getUserFromSId(response.data.id); 
                         if(Object.keys(user).length == 0) user = await User.createUser( 
                             {
-                                s_id: req.session.ytId, 
+                                s_id: response.data.id, 
                                 s_refresh: tokens.refresh_token
                             });
-                        else user.s_refresh = tokens.refresh_token;
-                        await user.save();
+                        else
+                        {
+                            user[0].s_refresh = tokens.refresh_token;
+                            await user[0].save();
+                        }
                     }
                     req.session.sToken = tokens.access_token;
                     req.session.user = user;
                     req.session.sInterval = setInterval(()=>req.session.sToken = "",(tokens.expires_in - 60)*1000);
-                });
+
+                    //res.send().redirect("https://www.google.com/search?client=firefox-b-d&q=express+converts+all+responses+to+json#ip=1");
+                }).catch((error)=>{console.log(error)});
         });
     }catch(error){console.log(error);res.send(error);}
 }
 
-exports.confirmTokens = function(req, res)
+exports.confirmYoutube = function(req, res)
 {
-    if(req.session.ytToken && req.session.sToken) res.status(200);
-    else res.status(204);
+    if(req.session.ytToken) res.send().status(200);
+    else res.send().status(204);
+}
+
+exports.confirmSpotify = function(req, res)
+{
+    if(req.session.sToken) res.send().status(200);
+    else res.send().status(204);
 }
 
 exports.logout = function(req,res)
@@ -232,7 +257,7 @@ exports.logout = function(req,res)
     clearInterval(req.session.ytInterval);
     clearInterval(req.session.sInterval);
     req.session.destroy();
-    res.status(200);
+    res.send().status(200);
 }
 
 exports.unlink = async function(req,res)
