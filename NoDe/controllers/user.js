@@ -16,6 +16,10 @@ exports.createUser = async function(data)
     return await user.save();
 }
 
-exports.deleteUser = async (id) => {
-    return await User.findByIdAndDelete(id);
+exports.deleteUserByYtId = async (id) => {
+    return await User.deleteMany({yt_id: id});
+}
+
+exports.deleteUserBySId = async (id) => {
+    return await User.deleteMany({yt_id: id});
 }

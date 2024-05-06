@@ -1,5 +1,4 @@
-//TODO: HOW THE FUCK DO YOU REDIRECT/CLOSE PAGE AFTER SAVING TOKEN?????????? SEND(WINDOW.CLOSE)/REDIRECT(URL) GIVE CIRCULAR JSON ERROR
-//      if user loged in with youtube and then with spotify in another session, mongo saves two users. delete first user in mongo if it finds two users with the same id
+//TODO: fix user.save() in lines 148 and 246, gives TypeError: req.session.user.save is not a function
 
 require('dotenv').config({path: '../.env'});
 
@@ -143,37 +142,61 @@ exports.setYoutubeToken = async (req, res) =>
                     }
                 ).then(async function(response)
                 {
+                    user = await User.getUserFromYtId(response.data.items[0].id); //search for user with yt id
+                    const arrLen = Object.keys(user).length;
+
                     if(req.session.sToken) //if already logged in with spotify
                     {
                         if(!req.session.user.yt_id) //has never logged in with yt before
+                        {
+                            if(arrLen > 0) User.deleteUserByYtId(response.data.items[0].id);
                             req.session.user.yt_id = response.data.items[0].id; //save youtube id for later
+                        }
+
                         //save refresh token and update db
                         req.session.user.yt_refresh = tokens.refresh_token;
                         await req.session.user.save();
                     }
                     else 
-                    {  
-                        user = await User.getUserFromYtId(response.data.items[0].id); //search for user with yt id
-                        if(Object.keys(user).length === 0)
-                        {
-                            user = await User.createUser( //condition means it's the first time the user logs in, so create user
-                            {
-                                yt_id: response.data.items[0].id, 
-                                yt_refresh: tokens.refresh_token
-                            });
-                            await user.save();
-                        }
-                        else
+                    {    
+                        if(arrLen === 1)
                         {
                             user[0].yt_refresh = tokens.refresh_token; //else save new refresh token
+                            user[0].yt_interval = setInterval(()=>req.session.ytToken = "",(tokens.expires_in - 60)*1000);
                             await user[0].save();
+                            req.session.user = user[0];
                         }
+                        else 
+                        {
+                            if(arrLen === 0)
+                            {
+                                user = await User.createUser( //condition means it's the first time the user logs in, so create user
+                                {
+                                    yt_id: response.data.items[0].id, 
+                                    yt_refresh: tokens.refresh_token,
+                                    yt_interval: setInterval(()=>req.session.ytToken = "",(tokens.expires_in - 60)*1000)
+                                });
+                                await user.save();
+                            }
+                            else
+                            {
+                                await User.deleteUserByYtId(response.data.items[0].id);
+                                user = await User.createUser(
+                                {
+                                    yt_id: response.data.items[0].id, 
+                                    yt_refresh: tokens.refresh_token,
+                                    yt_interval: setInterval(()=>req.session.ytToken = "",(tokens.expires_in - 60)*1000)
+                                });
+                                await user.save();
+                            }
+
+                            req.session.user = user;
+                        }
+                        
                     }    
                     req.session.ytToken = tokens.access_token;
-                    req.session.user = user;
-                    req.session.ytInterval = setInterval(()=>req.session.ytToken = "",(tokens.expires_in - 60)*1000);
 
-                    //res.redirect("<script>window.close();</script>");
+                    res.send("<script>window.close();</script>");
                 })
         })
     }catch(error){console.log(error);res.send(error)}
@@ -208,33 +231,59 @@ exports.setSpotifyToken = async (req,res) =>
                 }
             }).then(async (response)=>
                 {
+                    user = await User.getUserFromSId(response.data.id); 
+                    const arrLen = Object.keys(user).length;
+
                     if(req.session.ytToken)
                     {
                         if(!session.user.sId)
+                        {
+                            if(arrLen > 0) User.deleteUserBySId(response.data.id);
                             req.session.user.sId = response.data.id
+                        }
 
                         req.session.user.s_refresh = tokens.refresh_token;
                         await req.session.user.save();
                     }
                     else
                     {
-                        user = await User.getUserFromSId(response.data.id); 
-                        if(Object.keys(user).length == 0) user = await User.createUser( 
-                            {
-                                s_id: response.data.id, 
-                                s_refresh: tokens.refresh_token
-                            });
+                        if(arrLen === 1)
+                        {
+                            user[0].s_refresh = tokens.refresh_token; //else save new refresh token
+                            user[0].s_interval = setInterval(()=>req.session.sToken = "",(tokens.expires_in - 60)*1000);
+                            await user[0].save();
+                            req.session.user = user[0];  
+                        }
                         else
                         {
-                            user[0].s_refresh = tokens.refresh_token;
-                            await user[0].save();
+                            if(arrLen === 0)
+                            {
+                                user = await User.createUser( //condition means it's the first time the user logs in, so create user
+                                {
+                                    s_id: response.data.id, 
+                                    s_refresh: tokens.refresh_token,
+                                    s_interval: setInterval(()=>req.session.sToken = "",(tokens.expires_in - 60)*1000)
+                                });
+                                await user.save();
+                            }
+                            else
+                            {
+                                await User.deleteUserByYtId(response.data.items[0].id);
+                                user = await User.createUser( 
+                                {
+                                    s_id: response.data.id, 
+                                    s_refresh: tokens.refresh_token,
+                                    s_interval: setInterval(()=>req.session.sToken = "",(tokens.expires_in - 60)*1000)
+                                });
+                                await user.save();
+                            }
+
+                            req.session.user = user;    
                         }
                     }
                     req.session.sToken = tokens.access_token;
-                    req.session.user = user;
-                    req.session.sInterval = setInterval(()=>req.session.sToken = "",(tokens.expires_in - 60)*1000);
 
-                    //res.send().redirect("https://www.google.com/search?client=firefox-b-d&q=express+converts+all+responses+to+json#ip=1");
+                    res.send("<script>window.close()</script>");
                 }).catch((error)=>{console.log(error)});
         });
     }catch(error){console.log(error);res.send(error);}
@@ -254,8 +303,8 @@ exports.confirmSpotify = function(req, res)
 
 exports.logout = function(req,res)
 {
-    clearInterval(req.session.ytInterval);
-    clearInterval(req.session.sInterval);
+    clearInterval(req.session.user.ytInterval);
+    clearInterval(req.session.user.sInterval);
     req.session.destroy();
     res.send().status(200);
 }

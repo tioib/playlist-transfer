@@ -1,4 +1,3 @@
-require('dotenv').config({path: '../.env'});
 const tokenManager = require("../middleware/auth");
 
 const express = require("express"), router = express.Router();
