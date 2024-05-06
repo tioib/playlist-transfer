@@ -1,5 +1,4 @@
 //TODO: SAVE GENERATED PLAYLISTS TO DB, REMEMBER ERROR HANDLING. ADD ERROR HANDLING TO generatePlaylist
-//      make youtube playlist generation
 
 const axios = require('axios');
 const auth = require("./auth");
@@ -22,7 +21,7 @@ exports.getPlaylists = async function(req,res)
                 next = response.data.next;
                 list.concat(
                 response.data.items.filter((playlist)=>
-                playlist.owner.id == req.session.user.s_id));
+                playlist.owner.id == req.session.sId));
             }
             else
             {
@@ -30,7 +29,7 @@ exports.getPlaylists = async function(req,res)
                 return;
             }
             
-        }).catch((error)=>{console.log("GET SF PLAYLISTS ERROR: ",req.session.user, error); res.status(404).json(error)});
+        }).catch((error)=>{console.log("GET SF PLAYLISTS ERROR: ", error); res.status(404).json(error)});
     }while(next !== null);
 
     const arr = [];
@@ -67,7 +66,7 @@ async function getTracks(list,req,res)
                 res.status(response.status).json(response.data);
                 return 0;
             }
-        }).catch((error)=>{console.log("GET SF PL ITEMS ERROR: ",req.session.user, error); res.status(404).json(error)});
+        }).catch((error)=>{console.log("GET SF PL ITEMS ERROR: ", error); res.status(404).json(error)});
     }while(next !== null)
 
     return result;
@@ -83,7 +82,7 @@ async function search(req,item)
     }).then((response)=>
     {
         return response.data;
-    }).catch((error)=>{console.log("SF SEARCH ERROR: ",req.session.user, error); res.status(404).json(error)});
+    }).catch((error)=>{console.log("SF SEARCH ERROR: ", error); res.status(404).json(error)});
 }
 
 exports.generatePlaylist = async function(req,res)
@@ -91,7 +90,7 @@ exports.generatePlaylist = async function(req,res)
     const ytList = req.body.list;
 
     axios.post(
-        `https://api.spotify.com/v1/users/${req.session.user.s_id}/playlists`,
+        `https://api.spotify.com/v1/users/${req.session.sId}/playlists`,
         {
             "name": req.body.name,
             "description": req.body.description,
@@ -165,8 +164,8 @@ exports.generatePlaylist = async function(req,res)
                                 {
                                     yt_id: ytList.list.id,
                                     s_id: newPlaylist.id,
-                                    yt_user: req.session.user.yt_id,
-                                    s_user: req.session.user.s_id,
+                                    yt_user: req.session.ytId,
+                                    s_user: req.session.sId,
                                     yt_tracks: ytList.tracks,
                                     s_tracks: newTracks,
                                     yt_title: ytList.list.snippet.title,
@@ -183,13 +182,13 @@ exports.generatePlaylist = async function(req,res)
                             )
 
                             res.status(200);
-                        }catch(error){console.log("SF ADD PL TO DB ERROR: ",req.session.user, error); res.status(500).json(error)}
+                        }catch(error){console.log("SF ADD PL TO DB ERROR: ", error); res.status(500).json(error)}
                     }
                     else{ res.status(response.status).json(response.data)};
-                }).catch((error)=>{console.log("SF ADD TRACKS TO PL ERROR: ",req.session.user, error); res.status(404).json(error)});
+                }).catch((error)=>{console.log("SF ADD TRACKS TO PL ERROR: ", error); res.status(404).json(error)});
             }else res.status(404).json("NO TRACKS ON SEARCH"); //no tracks were found at all
         }else res.status(response.status).json(response.data);
-    }).catch((error)=>{console.log("SF CREATE PL ERROR: ",req.session.user, error); res.status(404).json(error)});
+    }).catch((error)=>{console.log("SF CREATE PL ERROR: ", error); res.status(404).json(error)});
 }
 
 async function calculatePoints(search,ytTrack)

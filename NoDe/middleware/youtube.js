@@ -16,7 +16,7 @@ exports.getPlaylists = async function(req,res)
         {
             next = response.data.nextPageToken ? "https://www.googleapis.com/youtube/v3/playlists?mine=true&part=contentDetails,id,localizations,snippet,status&maxResults=50&pageToken="+response.data.nextPageToken : "";
             list.concat(response.data.items);
-        }).catch((error)=>{console.log("GET SF PLAYLISTS ERROR: ",req.session.user, error); res.status(404).json(error)});
+        }).catch((error)=>{console.log("GET SF PLAYLISTS ERROR: ", error); res.status(404).json(error)});
     }while(next !== "");
 
     const arr = [];
@@ -53,7 +53,7 @@ async function getTracks(list,req,res)
                 res.status(response.status).json(response.data);
                 return 0;
             }
-        }).catch((error)=>{console.log("GET SF PL ITEMS ERROR: ",req.session.user, error); res.status(404).json(error)});
+        }).catch((error)=>{console.log("GET SF PL ITEMS ERROR: ", error); res.status(404).json(error)});
     }while(next !== null)
 
     return result;
@@ -74,7 +74,7 @@ async function search(req,item)
             return 0;
         }
         else if(response.status === 200) return response.data;
-    }).catch((error)=>{console.log("YT SEARCH ERROR: ",req.session.user, error); res.status(404).json(error)});
+    }).catch((error)=>{console.log("YT SEARCH ERROR: ", error); res.status(404).json(error)});
 }
 
 exports.generatePlaylist = async function(req,res)
@@ -132,8 +132,8 @@ exports.generatePlaylist = async function(req,res)
                     {
                         yt_id: newPlaylist.id,
                         s_id: sList.list.id,
-                        yt_user: req.session.user.yt_id,
-                        s_user: req.session.user.s_id,
+                        yt_user: req.session.ytId,
+                        s_user: req.session.sId,
                         yt_tracks: newTracks,
                         s_tracks: sList.tracks,
                         yt_title: req.body.name,
@@ -150,9 +150,9 @@ exports.generatePlaylist = async function(req,res)
                 )
 
                 res.status(200);
-            }catch(error){console.log("SF ADD PL TO DB ERROR: ",req.session.user, error); res.status(500).json(error)}
+            }catch(error){console.log("SF ADD PL TO DB ERROR: ", error); res.status(500).json(error)}
         }else res.status(response.status).json(response.data);
-    }).catch((error)=>{console.log("SF CREATE PL ERROR: ",req.session.user, error); res.status(404).json(error)});
+    }).catch((error)=>{console.log("SF CREATE PL ERROR: ", error); res.status(404).json(error)});
 }
 
 async function calculatePoints(search,sTrack)
@@ -195,5 +195,5 @@ async function addTrack(req,res,ids)
         {
             if(response.status === 200) return response.data;
             else{ res.status(response.status).json(response.data); return 0};
-        }).catch((error)=>{console.log("YT ADD TRACK TO PL ERROR: ",req.session.user, error); res.status(404).json(error)});
+        }).catch((error)=>{console.log("YT ADD TRACK TO PL ERROR: ", error); res.status(404).json(error)});
 }

@@ -1,4 +1,4 @@
-//TODO: fix user.save() in lines 148 and 246, gives TypeError: req.session.user.save is not a function
+//TODO: fix user.save() in lines 158 and 246, gives TypeError: req.session.user.save is not a function
 
 require('dotenv').config({path: '../.env'});
 
@@ -48,22 +48,22 @@ function sendYoutubeLinkButCorrectly() //gives auth error, converts spaces to %2
 exports.refreshYoutube = async function(req)
 {
     try{
+        const user = await User.getUserFromYtId(req.session.ytId);
         axios.post(
             "https://oauth2.googleapis.com/token",
             {
                 client_id: ytId,
                 client_secret: ytSecret,
                 grant_type: "refresh_token",
-                refresh_token: req.session.user.yt_refresh
+                refresh_token: user.yt_refresh
             }
         ).then(async function(response)
         {
             if(response.data.refresh_token) 
             {
-                req.session.user.yt_refresh = response.data.refresh_token;
+                user.yt_refresh = response.data.refresh_token;
                 await user.save();
             }
-            req.session.ytToken = response.data.access_token;
             return response.data;
         });
     }catch(error){console.log(error); res.send(error)}
@@ -72,11 +72,12 @@ exports.refreshYoutube = async function(req)
 exports.refreshSpotify = async function(req)
 {
     try{
+        const user = await User.getUserFromSId(req.session.sId);
         axios.post(
             "https://accounts.spotify.com/api/token",
             {
                 grant_type: 'refresh_token',
-                refresh_token: req.session.user.s_refresh,
+                refresh_token: user.s_refresh,
                 client_id: sId
             },
             {
@@ -87,9 +88,8 @@ exports.refreshSpotify = async function(req)
             }
         ).then(async function(response)
         {
-            req.session.user.s_refresh = response.data.refresh_token;
+            user.s_refresh = response.data.refresh_token;
             await user.save();
-            req.session.sToken = response.data.access_token;
             return response.data;
         });
     }catch(error){console.log(error); res.send(error)}
@@ -97,11 +97,16 @@ exports.refreshSpotify = async function(req)
 
 exports.sendYoutubeLink = async (req, res) =>
 {
-    if(req.session.sToken && req.session.user.yt_refresh)
+    if(req.session.sId)
     {
-        const tokens = await refreshYoutube(req);
-        req.session.ytInterval = setInterval(()=>req.session.ytToken = "",(tokens.expires_in - 60)*1000);
-        res.status(204);
+        const user = await User.getUserFromSId(req.session.sId);
+        if(user.yt_refresh !== undefined)
+        {
+            const tokens = await refreshYoutube(req);
+            user.yt_interval = setInterval(()=>req.session.ytId = "",(tokens.expires_in - 60)*1000);
+            await user.save();
+            res.status(204);
+        }
     }
     else
     //this should be the right way to send it but google is a bitch
@@ -111,11 +116,16 @@ exports.sendYoutubeLink = async (req, res) =>
 
 exports.sendSpotifyLink = async (req, res) =>
 {
-    if(req.session.ytToken && req.session.user.s_refresh)
+    if(req.session.ytId)
     {
-        const tokens = await refreshSpotify(req);
-        req.session.sInterval = setInterval(()=>req.session.sToken = "",(tokens.expires_in - 60)*1000);
-        res.status(204);
+        const user = await User.getUserFromYtId(req.session.ytId);
+        if(user.yt_refresh !== undefined)
+        {
+            const tokens = await refreshSpotify(req);
+            user.s_interval = setInterval(()=>req.session.sId = "",(tokens.expires_in - 60)*1000);
+            await user.save();
+            res.status(204);
+        }
     }
     else res.status(200).json(sLink);
 }
@@ -142,60 +152,44 @@ exports.setYoutubeToken = async (req, res) =>
                     }
                 ).then(async function(response)
                 {
-                    user = await User.getUserFromYtId(response.data.items[0].id); //search for user with yt id
+                    let user = await User.getUserFromYtId(response.data.items[0].id); //search for user with yt id
                     const arrLen = Object.keys(user).length;
 
-                    if(req.session.sToken) //if already logged in with spotify
+                    if(req.session.sId) //if already logged in with spotify
                     {
-                        if(!req.session.user.yt_id) //has never logged in with yt before
-                        {
-                            if(arrLen > 0) User.deleteUserByYtId(response.data.items[0].id);
-                            req.session.user.yt_id = response.data.items[0].id; //save youtube id for later
-                        }
+                        user = await User.getUserFromSId(req.session.sId);
+                        if(user[0].yt_id === undefined) await User.deleteUserByYtId(response.data.items[0].id);
 
-                        //save refresh token and update db
-                        req.session.user.yt_refresh = tokens.refresh_token;
-                        await req.session.user.save();
+                        user[0].yt_id = response.data.id
+                        user[0].yt_refresh = tokens.refresh_token;
+                        user[0].yt_access = tokens.access_token;
+                        user[0].yt_interval = setInterval(()=>req.session.ytId = "",(tokens.expires_in - 60)*1000);
+                    
+                        await user.save();
+                        req.session.ytId = response.data.items[0].id;
                     }
                     else 
                     {    
                         if(arrLen === 1)
                         {
                             user[0].yt_refresh = tokens.refresh_token; //else save new refresh token
-                            user[0].yt_interval = setInterval(()=>req.session.ytToken = "",(tokens.expires_in - 60)*1000);
+                            user[0].yt_access = tokens.access_token;
+                            user[0].yt_interval = setInterval(()=>req.session.ytId = "",(tokens.expires_in - 60)*1000);
                             await user[0].save();
-                            req.session.user = user[0];
                         }
                         else 
                         {
-                            if(arrLen === 0)
+                            user = await User.createUser( //condition means it's the first time the user logs in, so create user
                             {
-                                user = await User.createUser( //condition means it's the first time the user logs in, so create user
-                                {
-                                    yt_id: response.data.items[0].id, 
-                                    yt_refresh: tokens.refresh_token,
-                                    yt_interval: setInterval(()=>req.session.ytToken = "",(tokens.expires_in - 60)*1000)
-                                });
-                                await user.save();
-                            }
-                            else
-                            {
-                                await User.deleteUserByYtId(response.data.items[0].id);
-                                user = await User.createUser(
-                                {
-                                    yt_id: response.data.items[0].id, 
-                                    yt_refresh: tokens.refresh_token,
-                                    yt_interval: setInterval(()=>req.session.ytToken = "",(tokens.expires_in - 60)*1000)
-                                });
-                                await user.save();
-                            }
-
-                            req.session.user = user;
+                                yt_id: response.data.items[0].id, 
+                                yt_refresh: tokens.refresh_token,
+                                yt_access: tokens.access_token,
+                                yt_interval: setInterval(()=>req.session.ytId = "",(tokens.expires_in - 60)*1000)
+                            });
+                            await user.save();
                         }
-                        
                     }    
-                    req.session.ytToken = tokens.access_token;
-
+                    req.session.ytId = response.data.items[0].id;
                     res.send("<script>window.close();</script>");
                 })
         })
@@ -231,58 +225,45 @@ exports.setSpotifyToken = async (req,res) =>
                 }
             }).then(async (response)=>
                 {
-                    user = await User.getUserFromSId(response.data.id); 
+                    let user = await User.getUserFromSId(response.data.id); 
                     const arrLen = Object.keys(user).length;
 
-                    if(req.session.ytToken)
+                    if(req.session.ytId)
                     {
-                        if(!session.user.sId)
-                        {
-                            if(arrLen > 0) User.deleteUserBySId(response.data.id);
-                            req.session.user.sId = response.data.id
-                        }
+                        user = await User.getUserFromYtId(req.session.ytId);
+                        if(user[0].s_id === undefined) await User.deleteUserBySId(response.data.id);
 
-                        req.session.user.s_refresh = tokens.refresh_token;
-                        await req.session.user.save();
+                        user[0].s_id = response.data.id
+                        user[0].s_refresh = tokens.refresh_token;
+                        user[0].s_access = tokens.access_token;
+                        user[0].s_interval = setInterval(()=>req.session.sId = "",(tokens.expires_in - 60)*1000);
+                    
+                        await user.save();
+                        req.session.sId = response.data.id;
                     }
                     else
                     {
                         if(arrLen === 1)
                         {
                             user[0].s_refresh = tokens.refresh_token; //else save new refresh token
-                            user[0].s_interval = setInterval(()=>req.session.sToken = "",(tokens.expires_in - 60)*1000);
+                            user[0].s_access = tokens.access_token;
+                            user[0].s_interval = setInterval(()=>req.session.sId = "",(tokens.expires_in - 60)*1000);
                             await user[0].save();
-                            req.session.user = user[0];  
                         }
                         else
                         {
-                            if(arrLen === 0)
-                            {
-                                user = await User.createUser( //condition means it's the first time the user logs in, so create user
+                            user = await User.createUser( //condition means it's the first time the user logs in, so create user
                                 {
                                     s_id: response.data.id, 
                                     s_refresh: tokens.refresh_token,
-                                    s_interval: setInterval(()=>req.session.sToken = "",(tokens.expires_in - 60)*1000)
+                                    s_access: tokens.access_token,
+                                    s_interval: setInterval(()=>req.session.sId = "",(tokens.expires_in - 60)*1000)
                                 });
-                                await user.save();
-                            }
-                            else
-                            {
-                                await User.deleteUserByYtId(response.data.items[0].id);
-                                user = await User.createUser( 
-                                {
-                                    s_id: response.data.id, 
-                                    s_refresh: tokens.refresh_token,
-                                    s_interval: setInterval(()=>req.session.sToken = "",(tokens.expires_in - 60)*1000)
-                                });
-                                await user.save();
-                            }
-
-                            req.session.user = user;    
+                            
+                            await user.save();  
                         }
                     }
-                    req.session.sToken = tokens.access_token;
-
+                    req.session.sId = response.data.id;  
                     res.send("<script>window.close()</script>");
                 }).catch((error)=>{console.log(error)});
         });
@@ -291,20 +272,21 @@ exports.setSpotifyToken = async (req,res) =>
 
 exports.confirmYoutube = function(req, res)
 {
-    if(req.session.ytToken) res.send().status(200);
+    if(req.session.ytId) res.send().status(200);
     else res.send().status(204);
 }
 
 exports.confirmSpotify = function(req, res)
 {
-    if(req.session.sToken) res.send().status(200);
+    if(req.session.sId) res.send().status(200);
     else res.send().status(204);
 }
 
-exports.logout = function(req,res)
+exports.logout = async function(req,res)
 {
-    clearInterval(req.session.user.ytInterval);
-    clearInterval(req.session.user.sInterval);
+    const user = await User.getUserFromSId(req.session.sId);
+    clearInterval(user[0].yt_interval);
+    clearInterval(user[0].s_interval);
     req.session.destroy();
     res.send().status(200);
 }
@@ -312,17 +294,18 @@ exports.logout = function(req,res)
 exports.unlink = async function(req,res)
 {
     try{
-        User.deleteUser(req.session.user._id).then(function()
+        const user = await User.getUserFromSId(req.session.sId);
+        await User.deleteUser(user._id).then(function()
         {
             if(req.query.which)//true: deleted youtube, false: deleted spotify
                 User.createUser({
-                    s_id: req.session.user.s_id,
-                    s_refresh: req.session.user.s_refresh
+                    s_id: user.sid,
+                    s_refresh: user.s_refresh
                 });
             else 
                 User.createUser({
-                    yt_id: req.session.user.yt_id,
-                    yt_refresh: req.session.user.yt_refresh
+                    yt_id: user.yt_id,
+                    yt_refresh: user.yt_refresh
                 });
 
             this.logout(req,res);
@@ -333,8 +316,10 @@ exports.unlink = async function(req,res)
 
 exports.getToken = async function(req,which)
 {
+    const user = User.getUserFromYtId(req.session.ytId);
+
     if(which) //youtube
-        return req.session.ytToken === "" ? (await refreshYoutube(req)).auth_token : req.session.sToken
+        return req.session.ytId === "" ? (await refreshYoutube(req)).auth_token : user.yt_access
         
-    return req.session.sToken === "" ? (await refreshSpotify(req)).auth_token : req.session.sToken;
+    return req.session.sId === "" ? (await refreshSpotify(req)).auth_token : user.s_access;
 }
