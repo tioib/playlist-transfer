@@ -165,7 +165,7 @@ exports.setYoutubeToken = async (req, res) =>
                         user[0].yt_access = tokens.access_token;
                         user[0].yt_interval = setInterval(()=>req.session.ytId = "",(tokens.expires_in - 60)*1000);
                     
-                        await user.save();
+                        await user[0].save();
                         req.session.ytId = response.data.items[0].id;
                     }
                     else 
@@ -238,7 +238,7 @@ exports.setSpotifyToken = async (req,res) =>
                         user[0].s_access = tokens.access_token;
                         user[0].s_interval = setInterval(()=>req.session.sId = "",(tokens.expires_in - 60)*1000);
                     
-                        await user.save();
+                        await user[0].save();
                         req.session.sId = response.data.id;
                     }
                     else
