@@ -1,5 +1,3 @@
-//TODO: fix user.save() in lines 158 and 246, gives TypeError: req.session.user.save is not a function
-
 require('dotenv').config({path: '../.env'});
 
 const ytId = process.env.YT_ID, ytSecret = process.env.YT_SECRET, ytRedirect = process.env.YT_REDIRECT;
