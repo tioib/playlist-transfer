@@ -24,12 +24,14 @@ i18n
       en: {
         translation: {
           homePageTitle: "Transfer playlists between YouTube and Spotify",
+          language: "Language"
         }
       },
 
       es: {
         translation: {
           homePageTitle: "Transfiere playlists entre YouTube y Spotify",
+          language: "Idioma"
         }
       }
     }

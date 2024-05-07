@@ -14,7 +14,12 @@ const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
     <BrowserRouter>
-      <Theme  accentColor="crimson" grayColor="sand" radius="large" scaling="100%">
+      <Theme appearance="dark"  
+        accentColor="purple" 
+        grayColor="gray"
+        panelBackground="solid"
+        scaling="100%"
+      >
         <App />
       </Theme>
     </BrowserRouter>

@@ -4,13 +4,12 @@ import { useAuth } from '../context/AuthContext';
 import { Button, Spinner } from '@radix-ui/themes';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faYoutube, faSpotify} from '@fortawesome/free-brands-svg-icons';
-import {faCheck} from '@fortawesome/free-solid-svg-icons'
+import {faCheck} from '@fortawesome/free-solid-svg-icons';
 
 function LoginButton(props)
 {
     const [insideButton, setInsideButton] = useState(<></>);
     const [loginState, setLoginState] = useState(0);
-    const [loading, setLoading] = useState(false);
     const {loginYoutube, loginSpotify, login} = useAuth();
 
     async function handleLogin()

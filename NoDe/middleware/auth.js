@@ -95,6 +95,7 @@ exports.refreshSpotify = async function(req,user)
 
 exports.sendYoutubeLink = async (req, res) =>
 {
+    console.log(req.session);
     if(req.session.sId)
     {
         const user = await User.getUserFromSId(req.session.sId);
@@ -114,6 +115,7 @@ exports.sendYoutubeLink = async (req, res) =>
 
 exports.sendSpotifyLink = async (req, res) =>
 {
+    console.log(req.session);
     if(req.session.ytId)
     {
         const user = await User.getUserFromYtId(req.session.ytId);
@@ -198,8 +200,6 @@ exports.setYoutubeToken = async (req, res) =>
 exports.setSpotifyToken = async (req,res) =>
 {
     try{
-        console.log(req.query.code);
-      
          axios.post(
             "https://accounts.spotify.com/api/token",
             {
@@ -270,13 +270,22 @@ exports.setSpotifyToken = async (req,res) =>
     }catch(error){console.log(error);res.send(error);}
 }
 
-exports.confirmYoutube = function(req, res)
+exports.confirmYoutube = async function(req, res)
 {
-    if(req.session.ytId) res.send().status(200);
-    else res.send().status(204);
+    console.log(req.session);
+    if(req.session.ytId) 
+    {
+        console.log("si");
+        res.send().status(200);
+    }
+    else
+    {
+        console.log("no");
+        res.send().status(500);
+    }
 }
 
-exports.confirmSpotify = function(req, res)
+exports.confirmSpotify = async function(req, res)
 {
     if(req.session.sId) res.send().status(200);
     else res.send().status(204);
@@ -284,7 +293,9 @@ exports.confirmSpotify = function(req, res)
 
 exports.logout = async function(req,res)
 {
+    console.log(req.session);
     const user = await User.getUserFromSId(req.session.sId);
+    console.log(user);
     clearInterval(user[0].yt_interval);
     clearInterval(user[0].s_interval);
     req.session.destroy();
