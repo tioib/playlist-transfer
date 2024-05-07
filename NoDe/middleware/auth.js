@@ -48,7 +48,7 @@ function sendYoutubeLinkButCorrectly() //gives auth error, converts spaces to %2
 exports.refreshYoutube = async function(req)
 {
     try{
-        const user = await User.getUserFromYtId(req.session.ytId);
+        const user = await User.getUserFromSId(req.session.sId);
         axios.post(
             "https://oauth2.googleapis.com/token",
             {
@@ -63,6 +63,7 @@ exports.refreshYoutube = async function(req)
             {
                 user.yt_refresh = response.data.refresh_token;
                 await user.save();
+                req.session.ytId = user.yt_id;
             }
             return response.data;
         });
@@ -72,7 +73,7 @@ exports.refreshYoutube = async function(req)
 exports.refreshSpotify = async function(req)
 {
     try{
-        const user = await User.getUserFromSId(req.session.sId);
+        const user = await User.getUserFromYtId(req.session.ytId);
         axios.post(
             "https://accounts.spotify.com/api/token",
             {
@@ -90,6 +91,7 @@ exports.refreshSpotify = async function(req)
         {
             user.s_refresh = response.data.refresh_token;
             await user.save();
+            req.session.sId = user.s_id;
             return response.data;
         });
     }catch(error){console.log(error); res.send(error)}
