@@ -13,7 +13,7 @@ app.use(cors({
     credentials: true
     }));
 app.use(session({
-    secret: 'Qu13r0P4p4sC0nK37chup',
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: {
