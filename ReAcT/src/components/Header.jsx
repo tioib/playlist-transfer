@@ -19,7 +19,7 @@ function Header()
     }
 
     return(
-        <Container>
+        <Container style={{paddingLeft: "10px", paddingRight: "10px"}}>
             <Flex display="inline-flex" gap="3" align="center" justify="start">
                 <p>{t("language")}</p>
                 {
