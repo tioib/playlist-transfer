@@ -3,6 +3,7 @@ import { createContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import axios from 'axios';
+axios.defaults.withCredentials = true;
 
 const AuthContext = createContext();
 const BASE_URL = 'http://localhost:3002/auth/';
@@ -42,25 +43,26 @@ export const AuthProvider = ({children}) =>
             
         if(response.data)
         {
-            window.open(response.data, "_blank");
+            if(response.data !== true) window.open(response.data, "_blank");
             if(which) setYtInterval(setInterval(async () => 
             {
                 axios.get(BASE_URL + "yt/confirm")
                 .then(function(res)
                 {
-                    if(res.status === 200)
+                    console.log(res);
+                    if(res.data) //working only with status didn't work, it only returned status 204 even if configured on the server to return 200, this is the only thing that worked
                     {
-                        console.log(res);
                         setLoginYoutube(true);
                     }
                 });
             }, 2000));
             else setSInterval(setInterval(async () => 
             {
-                axios.get(BASE_URL + (which ? "yt/confirm" : "s/confirm"))
+                axios.get(BASE_URL + "s/confirm")
                 .then(function(res)
                 {
-                    if(res.status === 200)
+                    console.log(res);
+                    if(res.data)
                     {
                         setLoginSpotify(true);
                     }
