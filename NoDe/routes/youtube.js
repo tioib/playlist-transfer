@@ -1,5 +1,5 @@
 require('dotenv').config({path: '../.env'});
-const youtube = require("../middleware/spotify");
+const youtube = require("../middleware/youtube");
 
 const express = require("express"), router = express.Router();
 

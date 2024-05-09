@@ -3,69 +3,90 @@ const auth = require("./auth");
 
 exports.getPlaylists = async function(req,res)
 {
-    const list = [];
+    let list = [];
     let next = "https://www.googleapis.com/youtube/v3/playlists?mine=true&part=contentDetails,id,localizations,snippet,status&maxResults=50";
-    do
-    {
-        axios.get(next,
+    try{    
+        do
         {
-            headers: {
-                Authorization: 'Bearer '+ await auth.getToken(true)
-            }
-        }).then((response)=>
-        {
-            next = response.data.nextPageToken ? "https://www.googleapis.com/youtube/v3/playlists?mine=true&part=contentDetails,id,localizations,snippet,status&maxResults=50&pageToken="+response.data.nextPageToken : "";
-            list.concat(response.data.items);
-        }).catch((error)=>{console.log("GET SF PLAYLISTS ERROR: ", error); res.status(404).json(error)});
-    }while(next !== "");
+            let response = await axios.get(next,
+                {
+                    headers: {
+                        Authorization: 'Bearer '+ await auth.getToken(req,true)
+                    }
+                });
 
+            console.log(response.status,response.data.nextPageToken);
+            if(response.status === 200)
+            {
+                let response = await axios.get(next,
+                    {
+                        headers: {
+                            Authorization: 'Bearer '+ await auth.getToken(req,true)
+                        }
+                    });
+                next = response.data.nextPageToken ? "https://www.googleapis.com/youtube/v3/playlists?mine=true&part=contentDetails,id,localizations,snippet,status&maxResults=50&pageToken="+response.data.nextPageToken : "";
+                list = list.concat(response.data.items);
+            }
+            else
+            {
+                console.log(response.data);
+                res.status(response.status).json(response.data);
+                return;
+            }
+        }while(next);
+    }catch(error){console.log("GET YT PLAYLISTS ERROR: ", error); res.status(404).json(error)};
+    
     const arr = [];
     for(let i = 0; i < list.length; i++)
     {
-        let result = getTracks(list[i],req,res);
+        let result = await getTracks(list[i],req,res);
         if(result === 0) return;
         else arr.push(result);
     }
-
+    console.log(arr);
     res.status(200).json(arr);
 }
 
 async function getTracks(list,req,res)
 {
-    const result = {playlist:list,tracks:[]};
-    let flag = true;
+    const result = {list:list,tracks:[]};
     next = `https://www.googleapis.com/youtube/v3/playlistItems?playlistId=${list.id}&part=contentDetails,id,snippet,status&maxResults=50`;
-    do
+
+    try
     {
-        axios.get(next,{},
+        do
         {
-            headers: {
-                Authorization: 'Bearer '+ await auth.getToken(req,true)
-            }
-        }).then((response)=>
-        {   
+            let response = await axios.get(next,
+                {
+                    headers: {
+                        Authorization: 'Bearer '+ await auth.getToken(req,true)
+                    }
+                });
+            console.log(response.status,response.data.nextPageToken);
             if(response.status === 200)
             {
                 next = response.data.nextPageToken ? `https://www.googleapis.com/youtube/v3/playlistItems?playlistId=${list.id}&part=contentDetails,id,snippet,status&maxResults=50&pageToken=${response.data.nextPageToken}` : "";
-                result[i].tracks.concat(response.data.items);   
+                result.tracks = result.tracks.concat(response.data.items);   
             }
             else
             {
+                console.log(response.data);
                 res.status(response.status).json(response.data);
-                flag = false;
+                return 0;
             }
-        }).catch((error)=>{console.log("GET SF PL ITEMS ERROR: ", error); res.status(404).json(error)});
-    }while(next !== null && flag)
-
+        
+        }while(next)
+    }
+    catch(error){console.log("GET SF PL ITEMS ERROR: ", error.request, error.response); res.status(404).json(error)};
     return result;
 }
 
-async function search(req,item)
+async function search(req,res,item)
 {
     axios.get(`https://www.googleapis.com/youtube/v3/search?q=${item}&part=snippet&type=video&maxResults=50`,
     {
         headers: {
-            Authorization: 'Bearer '+ await auth.getToken(true)
+            Authorization: 'Bearer '+ await auth.getToken(req,true)
         }
     }).then((response)=>
     {
@@ -106,6 +127,7 @@ exports.generatePlaylist = async function(req,res)
             sList.tracks.forEach(async sTrack => {
                 let ytTrackList = await search( //perform the search
                     req,
+                    res,
                     sTrack.snippet.title + " " + sTrack.snippet.videoOwnerChannelTitle //search on spotify with youtube's video title and uploader channel title (subject to change)
                 );
 

@@ -5,12 +5,12 @@ const BASE_URL = 'http://localhost:3002/';
 
 export const getYoutubePlaylists = () =>
 {
-    return axios.get(`${BASE_URL}/yt/playlists`);
+    return axios.get(`${BASE_URL}yt/playlists`);
 }
 
 export const createYoutubePlaylist = (body,title,desc,privacy,privIfUn) =>
 {
-    return axios.post(`${BASE_URL}/yt/playlists?title=${title}&desc=${desc}&privacy=${privacy}&privIfUn=${privIfUn}`,
+    return axios.post(`${BASE_URL}yt/playlists?title=${title}&desc=${desc}&privacy=${privacy}&privIfUn=${privIfUn}`,
     {
         list: body.list,
         name: body.name,
@@ -21,12 +21,12 @@ export const createYoutubePlaylist = (body,title,desc,privacy,privIfUn) =>
 
 export const getSpotifyPlaylists = () =>
 {
-    return axios.get(`${BASE_URL}/s/playlists`);
+    return axios.get(`${BASE_URL}s/playlists`);
 }
 
 export const createSpotifyPlaylist = (body,title,desc,privacy,privIfUn) =>
 {
-    return axios.post(`${BASE_URL}/s/playlists?title=${title}&desc=${desc}&privacy=${privacy}&privIfUn=${privIfUn}`,
+    return axios.post(`${BASE_URL}s/playlists?title=${title}&desc=${desc}&privacy=${privacy}&privIfUn=${privIfUn}`,
     {
         list: body.list,
         name: body.name,

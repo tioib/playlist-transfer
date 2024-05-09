@@ -321,9 +321,9 @@ exports.unlink = async function(req,res)
 exports.getToken = async function(req,which)
 {
     const user = await User.getUserFromYtId(req.session.ytId);
-
+    
     if(which)
-        return user.yt_access; 
+        return user[0].yt_access; 
 
-    return user.s_access; 
+    return user[0].s_access; 
 }

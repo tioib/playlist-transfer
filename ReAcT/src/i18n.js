@@ -45,7 +45,7 @@ i18n
 
           playlists: {
             youtubeT: {
-              title: "Playlists de Youtube"
+              title: "Playlists de YouTube"
             },
 
             spotifyT: {
