@@ -7,7 +7,7 @@ exports.getPlaylists = async function(req,res)
     let next = "https://www.googleapis.com/youtube/v3/playlists?mine=true&part=contentDetails,id,localizations,snippet,status&maxResults=50";
     do
     {
-        axios.get(next,{},
+        axios.get(next,
         {
             headers: {
                 Authorization: 'Bearer '+ await auth.getToken(true)
@@ -33,6 +33,7 @@ exports.getPlaylists = async function(req,res)
 async function getTracks(list,req,res)
 {
     const result = {playlist:list,tracks:[]};
+    let flag = true;
     next = `https://www.googleapis.com/youtube/v3/playlistItems?playlistId=${list.id}&part=contentDetails,id,snippet,status&maxResults=50`;
     do
     {
@@ -51,17 +52,17 @@ async function getTracks(list,req,res)
             else
             {
                 res.status(response.status).json(response.data);
-                return 0;
+                flag = false;
             }
         }).catch((error)=>{console.log("GET SF PL ITEMS ERROR: ", error); res.status(404).json(error)});
-    }while(next !== null)
+    }while(next !== null && flag)
 
     return result;
 }
 
 async function search(req,item)
 {
-    axios.get(`https://www.googleapis.com/youtube/v3/search?q=${item}&part=snippet&type=video&maxResults=50`,{},
+    axios.get(`https://www.googleapis.com/youtube/v3/search?q=${item}&part=snippet&type=video&maxResults=50`,
     {
         headers: {
             Authorization: 'Bearer '+ await auth.getToken(true)

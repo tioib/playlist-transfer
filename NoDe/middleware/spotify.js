@@ -9,7 +9,7 @@ exports.getPlaylists = async function(req,res)
     let next = "https://api.spotify.com/v1/me/playlists";
     do
     {
-        axios.get(next,{},
+        axios.get(next,
         {
             headers: {
                 Authorization: 'Bearer '+ await auth.getToken(req,false)
@@ -46,10 +46,11 @@ exports.getPlaylists = async function(req,res)
 async function getTracks(list,req,res)
 {
     const result = {playlist:list,tracks:[]};
+    let flag = true;
     next = `https://api.spotify.com/v1/playlists/${list.id}/tracks`;
     do
     {
-        axios.get(next,{},
+        axios.get(next,
         {
             headers: {
                 Authorization: 'Bearer '+ await auth.getToken(req,false)
@@ -64,17 +65,17 @@ async function getTracks(list,req,res)
             else
             {
                 res.status(response.status).json(response.data);
-                return 0;
+                flag = false;
             }
         }).catch((error)=>{console.log("GET SF PL ITEMS ERROR: ", error); res.status(404).json(error)});
-    }while(next !== null)
+    }while(next !== null && flag)
 
     return result;
 }
 
 async function search(req,item)
 {
-    axios.get(`https://api.spotify.com/v1/search?q=${item}&type=track,episode&limit=50`,{},
+    axios.get(`https://api.spotify.com/v1/search?q=${item}&type=track,episode&limit=50`,
     {
         headers: {
             Authorization: 'Bearer '+ await auth.getToken(req,false)
