@@ -49,7 +49,7 @@ function PanelPage() {
             : ytPlaylists.map(function(playlist)
             {
               return(
-                <Card href="#" key={playlist.list.id} maxWidth="400px">
+                <Card key={playlist.list.id} maxwidth="400px">
                   <Flex gap="3" align="center">
                     <Avatar
                       size="3"
@@ -58,7 +58,7 @@ function PanelPage() {
                       fallback="T"
                     />
                     <Box>
-                      <Link as="div" size="2" weight="bold">
+                      <Link href="#" as="div" size="3" weight="bold">
                         {playlist.list.snippet.title}
                       </Link>
                       <Text as="div" size="2" color="gray">
@@ -85,16 +85,16 @@ function PanelPage() {
             : sPlaylists.map(function(playlist)
             {
               return(
-                <Card key={playlist.list.id} maxWidth="400px">
+                <Card key={playlist.list.id}>
                   <Flex gap="3" align="center">
                     <Avatar
                       size="3"
-                      src={playlist.list.images[0].href}
+                      src={playlist.list.images[0].url}
                       radius="none"
                       fallback="T"
                     />
                     <Box>
-                      <Link as="div" size="2" weight="bold">
+                      <Link href="www.google.com" as="div" size="2" weight="bold">
                         {playlist.list.name}
                       </Link>
                       <Text as="div" size="2" color="gray">
