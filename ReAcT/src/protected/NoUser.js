@@ -1,10 +1,7 @@
 import { Outlet, Navigate } from 'react-router-dom'
-import { useAuth } from "../context/AuthContext";
 
 const NoUser = () => {
-  const {loginSpotify, loginYoutube} = useAuth();
-    
-  if(!(loginSpotify && loginYoutube)) return(<Outlet/>);
+  if(!(parseInt(window.sessionStorage.getItem("login")))) return(<Outlet/>);
   return(<Navigate to="/panel"/>);
 }
 

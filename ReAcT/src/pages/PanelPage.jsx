@@ -49,20 +49,20 @@ function PanelPage() {
             : ytPlaylists.map(function(playlist)
             {
               return(
-                <Card key={playlist.list.id} maxwidth="400px">
+                <Card key={playlist.id} maxwidth="400px">
                   <Flex gap="3" align="center">
                     <Avatar
                       size="3"
-                      src={playlist.list.snippet.thumbnails.default.url}
+                      src={playlist.snippet.thumbnails.default.url}
                       radius="none"
                       fallback="T"
                     />
                     <Box>
                       <Link href="#" as="div" size="3" weight="bold">
-                        {playlist.list.snippet.title}
+                        {playlist.snippet.title}
                       </Link>
                       <Text as="div" size="2" color="gray">
-                        {playlist.list.snippet.description}
+                        {playlist.snippet.description}
                       </Text>
                     </Box>
                   </Flex>
@@ -85,20 +85,20 @@ function PanelPage() {
             : sPlaylists.map(function(playlist)
             {
               return(
-                <Card key={playlist.list.id}>
+                <Card key={playlist.id}>
                   <Flex gap="3" align="center">
                     <Avatar
                       size="3"
-                      src={playlist.list.images[0].url}
+                      src={playlist.images[0].url}
                       radius="none"
                       fallback="T"
                     />
                     <Box>
                       <Link href="www.google.com" as="div" size="2" weight="bold">
-                        {playlist.list.name}
+                        {playlist.name}
                       </Link>
                       <Text as="div" size="2" color="gray">
-                        {playlist.list.description}
+                        {playlist.description}
                       </Text>
                     </Box>
                   </Flex>

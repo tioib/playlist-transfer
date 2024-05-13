@@ -18,7 +18,6 @@ export const AuthProvider = ({children}) =>
     const navigate = useNavigate();
     const [loginYoutube, setLoginYoutube] = useState(false);
     const [loginSpotify, setLoginSpotify] = useState(false);
-    const [confirmed, setConfirmed] = useState(false);
     const [ytInterval, setYtInterval] = useState("");
     const [sInterval, setSInterval] = useState("");
 
@@ -27,13 +26,21 @@ export const AuthProvider = ({children}) =>
         if(loginYoutube)
         {
             clearInterval(ytInterval);
-            if(loginSpotify) navigate("/panel");
+            if(loginSpotify)
+            {
+                window.sessionStorage.setItem("login",1);
+                navigate("/panel");
+            }
         }
 
         if(loginSpotify)
         {
             clearInterval(sInterval);
-            if(loginYoutube) navigate("/panel");
+            if(loginYoutube)
+            {
+                window.sessionStorage.setItem("login",1);
+                navigate("/panel");
+            }
         }
     },[loginYoutube,loginSpotify]);
 
@@ -79,8 +86,9 @@ export const AuthProvider = ({children}) =>
         axios.post(`${BASE_URL}/logout`).then(function(response){
             if(response.status=== 200)
             {
-                setLoginSpotify(false); setLoginYoutube(false);
-                setConfirmed(false);
+                setLoginSpotify(false);
+                setLoginYoutube(false);
+                window.sessionStorage.setItem("login",0);
                 navigate("/");
             }
             else console.log(response.data)
@@ -89,7 +97,7 @@ export const AuthProvider = ({children}) =>
     };
 
     return (
-        <AuthContext.Provider value={{ confirmed,loginSpotify, loginYoutube, login, logout }}>
+        <AuthContext.Provider value={{ loginSpotify, loginYoutube, login, logout }}>
             {children}
         </AuthContext.Provider>
     );

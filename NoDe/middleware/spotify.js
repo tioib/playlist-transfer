@@ -16,7 +16,7 @@ exports.getPlaylists = async function(req,res)
                         Authorization: 'Bearer '+ await auth.getToken(req,false)
                     }
                 });
-            //console.log(response.status, response.data.next);
+            console.log(response.status, response.data.next);
             if(response.status === 200)
             {
                 next = response.data.next;
@@ -34,22 +34,13 @@ exports.getPlaylists = async function(req,res)
         }while(next !== null);
     }catch(error){console.log("GET SF PLAYLISTS ERROR: ", error); res.status(404).json(error)};
 
-    const arr = [];
-    for(let i = 0; i < list.length; i++)
-    {
-        let result = await getTracks(list[i],req,res);
-
-        if(result === 0) return;
-        else arr.push(result);
-    }
-    console.log(arr);
-    res.status(200).json(arr);
+    res.status(200).json(list);
 }
 
-async function getTracks(list,req,res)
+exports.getTracks = async function (req,res)
 {
-    const result = {list:list,tracks:[]};
-    next = `https://api.spotify.com/v1/playlists/${list.id}/tracks`;
+    let result = [];
+    next = `https://api.spotify.com/v1/playlists/${req.query.id}/tracks`;
     try
     {
         do
@@ -64,19 +55,20 @@ async function getTracks(list,req,res)
             if(response.status === 200)
             {
                 next = response.data.next;
-                result.tracks = result.tracks.concat(response.data.items);
+                result = result.concat(response.data.items);
             }
             else
             {
                 console.log(response.data);
                 res.status(response.status).json(response.data);
-                return 0;
+                return;
             }
         
         }while(next !== null)
     }
     catch(error){console.log("GET SF PL ITEMS ERROR: ", error.request, error.response); res.status(404).json(error)};
-    return result;
+    
+    res.status(200).json(result);
 }
 
 async function search(req,res,item)
