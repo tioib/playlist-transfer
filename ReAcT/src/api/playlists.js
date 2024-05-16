@@ -19,6 +19,11 @@ export const createYoutubePlaylist = (body,title,desc,privacy,privIfUn) =>
     });
 }
 
+export const getYoutubeTracks = () =>
+{
+    return axios.get(`${BASE_URL}yt/tracks`);
+}
+
 export const getSpotifyPlaylists = () =>
 {
     return axios.get(`${BASE_URL}s/playlists`);
@@ -33,4 +38,9 @@ export const createSpotifyPlaylist = (body,title,desc,privacy,privIfUn) =>
         description: body.description,
         public: body.public  
     });
+}
+
+export const getSpotifyTracks = () =>
+{
+    return axios.get(`${BASE_URL}s/tracks`);
 }

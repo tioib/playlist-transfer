@@ -2,6 +2,7 @@ import { Grid, Box, Flex, Text, Spinner, Card, Avatar, Link, Button } from "@rad
 import { useState, useEffect } from "react";
 import { useTranslation } from 'react-i18next';
 import { getYoutubePlaylists, getSpotifyPlaylists } from "../api/playlists";
+import SelectPlaylist from "../components/SelectPlaylist";
 
 function PanelPage() {
   const {youtubeT, spotifyT} = useTranslation().t("playlists");
@@ -45,11 +46,11 @@ function PanelPage() {
                         <Spinner size="3"/>
                       </Flex>
           : (
-            ytPlaylists.length === 0 ? <div><br/><Text color="red">NO SE ENCONTRARON PLAYLISTS</Text></div> 
+            ytPlaylists.length === 0 ? <div><br/><Text color="red">{youtubeT.notFound}</Text></div> 
             : ytPlaylists.map(function(playlist)
             {
               return(
-                <Card key={playlist.id} maxwidth="400px">
+                <Card key={playlist.id}>
                   <Flex gap="3" align="center">
                     <Avatar
                       size="3"
@@ -58,9 +59,7 @@ function PanelPage() {
                       fallback="T"
                     />
                     <Box>
-                      <Link href="#" as="div" size="3" weight="bold">
-                        {playlist.snippet.title}
-                      </Link>
+                      <SelectPlaylist which={true} title={playlist.snippet.title} desc={playlist.snippet.description} />
                       <Text as="div" size="2" color="gray">
                         {playlist.snippet.description}
                       </Text>
@@ -81,7 +80,7 @@ function PanelPage() {
                       <Spinner size="3"/>
                     </Flex>
           : (
-            sPlaylists.length === 0 ? <Text color="red">NO SE ENCONTRARON PLAYLISTS</Text> 
+            sPlaylists.length === 0 ? <Text color="red">{spotifyT.notFound}</Text> 
             : sPlaylists.map(function(playlist)
             {
               return(
@@ -94,9 +93,7 @@ function PanelPage() {
                       fallback="T"
                     />
                     <Box>
-                      <Link href="www.google.com" as="div" size="2" weight="bold">
-                        {playlist.name}
-                      </Link>
+                    <SelectPlaylist which={true} title={playlist.name} desc={playlist.description} />
                       <Text as="div" size="2" color="gray">
                         {playlist.description}
                       </Text>
