@@ -93,16 +93,19 @@ const refreshSpotify = async function(user)
 
 exports.sendYoutubeLink = async (req, res) =>
 {
+    //console.log(req.session);
     if(req.session.sId)
     {
         const user = await User.getUserFromSId(req.session.sId);
         if(user[0].yt_refresh !== undefined)
         {
+            //console.log(user);
             const tokens = await refreshYoutube(user[0]);
             user[0].yt_interval = setInterval(async ()=>await refreshYoutube(user), tokens.expires_in * 60 * 1000 - 60);
             await user[0].save();
 
             req.session.ytId = user[0].yt_id;
+            //console.log(req.session);
 
             res.status(200).send(true);
         }
@@ -164,7 +167,7 @@ exports.setYoutubeToken = async (req, res) =>
                         user = await User.getUserFromSId(req.session.sId);
                         if(user[0].yt_id === undefined) await User.deleteUserByYtId(response.data.items[0].id);
 
-                        user[0].yt_id = response.data.id
+                        user[0].yt_id = response.data.items[0].id;
                         user[0].yt_refresh = tokens.refresh_token;
                         user[0].yt_access = tokens.access_token;
                         user[0].yt_interval = setInterval(async ()=>await refreshYoutube(user[0]), tokens.expires_in * 60 * 1000 - 60);
@@ -175,6 +178,7 @@ exports.setYoutubeToken = async (req, res) =>
                     {    
                         if(arrLen === 1)
                         {
+                            user[0].yt_id = response.data.items[0].id;
                             user[0].yt_refresh = tokens.refresh_token; //else save new refresh token
                             user[0].yt_access = tokens.access_token;
                             user[0].yt_interval = setInterval(async ()=>await refreshYoutube(user[0]), tokens.expires_in * 60 * 1000 - 60);
@@ -245,6 +249,7 @@ exports.setSpotifyToken = async (req,res) =>
                     {
                         if(arrLen === 1)
                         {
+                            user[0].s_id = response.data.id;
                             user[0].s_refresh = tokens.refresh_token; //else save new refresh token
                             user[0].s_access = tokens.access_token;
                             user[0].s_interval = setInterval(async ()=>await refreshSpotify(user[0]), tokens.expires_in * 60 * 1000 - 60);
@@ -321,7 +326,7 @@ exports.unlink = async function(req,res)
 exports.getToken = async function(req,which)
 {
     const user = await User.getUserFromYtId(req.session.ytId);
-    
+    console.log(user);
     if(which)
         return user[0].yt_access; 
 

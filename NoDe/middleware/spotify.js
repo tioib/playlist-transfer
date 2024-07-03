@@ -2,6 +2,7 @@
 
 const axios = require('axios');
 const auth = require("./auth");
+const { getTracks } = require('./youtube');
 
 exports.getPlaylists = async function(req,res)
 {
@@ -37,10 +38,10 @@ exports.getPlaylists = async function(req,res)
     res.status(200).json(list);
 }
 
-exports.getTracks = async function (req,res)
+exports.getTracks = async function (id,res)
 {
     let result = [];
-    next = `https://api.spotify.com/v1/playlists/${req.query.id}/tracks`;
+    next = `https://api.spotify.com/v1/playlists/${id}/tracks`;
     try
     {
         do
@@ -61,14 +62,14 @@ exports.getTracks = async function (req,res)
             {
                 console.log(response.data);
                 res.status(response.status).json(response.data);
-                return;
+                return 0;
             }
         
         }while(next !== null)
     }
     catch(error){console.log("GET SF PL ITEMS ERROR: ", error.request, error.response); res.status(404).json(error)};
     
-    res.status(200).json(result);
+    return result;
 }
 
 async function search(req,res,item)
@@ -87,6 +88,8 @@ async function search(req,res,item)
 exports.generatePlaylist = async function(req,res)
 {
     const ytList = req.body.list;
+    const tracks = await getTracks(ytList.id,res);
+    if(tracks === 0) return;
 
     axios.post(
         `https://api.spotify.com/v1/users/${req.session.sId}/playlists`,
@@ -104,7 +107,7 @@ exports.generatePlaylist = async function(req,res)
         {
             const newPlaylist = response.data, newTracks = [];
             const uris = []; //array of the track ids in the format the request needs for the tracks to be added to the playlist
-            ytList.tracks.forEach(async ytTrack => {
+            tracks.forEach(async ytTrack => {
                 let sTrackList = await search( //perform the search
                     req,
                     res,
@@ -162,17 +165,17 @@ exports.generatePlaylist = async function(req,res)
                             const SavePlaylist = require("../controllers/playlists");
                             await SavePlaylist.createSavedPlaylist(
                                 {
-                                    yt_id: ytList.list.id,
+                                    yt_id: ytList.id,
                                     s_id: newPlaylist.id,
                                     yt_user: req.session.ytId,
                                     s_user: req.session.sId,
-                                    yt_tracks: ytList.tracks,
+                                    yt_tracks: tracks,
                                     s_tracks: newTracks,
-                                    yt_title: ytList.list.snippet.title,
+                                    yt_title: ytList.snippet.title,
                                     s_title: req.body.name,
-                                    yt_desc: ytList.list.description,
+                                    yt_desc: ytList.description,
                                     s_desc: req.body.description,
-                                    yt_privacy: ytList.list.status.privacyStatus,
+                                    yt_privacy: ytList.status.privacyStatus,
                                     s_privacy: req.body.public,
                                     link_title: req.query.title,
                                     link_desc: req.query.desc,

@@ -67,8 +67,8 @@ i18n
             create: "CREAR",
 
             which: {
-              youtube: "Crear una nueva playlist en tu perfil de Spotify con esta playlist de YouTube",
-              spotify: "Crear una nueva playlist en tu canal de YouTube con esta playlist de Spotify"
+              youtube: "Crear una nueva playlist en tu perfil de Spotify a partir de esta playlist de YouTube",
+              spotify: "Crear una nueva playlist en tu canal de YouTube a partir de esta playlist de Spotify"
             },
 
             title: {

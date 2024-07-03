@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useTranslation } from 'react-i18next';
 import { getYoutubePlaylists, getSpotifyPlaylists } from "../api/playlists";
 import SelectPlaylist from "../components/SelectPlaylist";
+import "./css/styles.css";
 
 function PanelPage() {
   const {youtubeT, spotifyT} = useTranslation().t("playlists");
@@ -38,7 +39,7 @@ function PanelPage() {
 
   return (
     <Grid columns="2" gap="5" width="auto">
-      <Box style={{textAlign:"center"}} width="100%" display="inline">
+      <Flex direction="column" align="center" style={{textAlign:"center"}} width="100%" display="inline">
         <Text>{youtubeT.title}</Text>
         {
           ytLoading ? <Flex justify="center" align="center">
@@ -50,7 +51,7 @@ function PanelPage() {
             : ytPlaylists.map(function(playlist)
             {
               return(
-                <Card key={playlist.id}>
+                <Card className="card" key={playlist.id}>
                   <Flex gap="3" align="center">
                     <Avatar
                       size="3"
@@ -59,7 +60,7 @@ function PanelPage() {
                       fallback="T"
                     />
                     <Box>
-                      <SelectPlaylist which={true} title={playlist.snippet.title} desc={playlist.snippet.description} />
+                      <SelectPlaylist link={"https://www.youtube.com/playlist?list="+playlist.id} img={playlist.snippet.thumbnails.default.url} which={true} title={playlist.snippet.title} desc={playlist.snippet.description} />
                       <Text as="div" size="2" color="gray">
                         {playlist.snippet.description}
                       </Text>
@@ -70,9 +71,9 @@ function PanelPage() {
             })
           )
         }
-      </Box>
+      </Flex>
 
-      <Box style={{textAlign:"center"}} width="100%" display="inline">
+      <Flex direction="column" align="center" style={{textAlign:"center"}} width="100%" display="inline">
         <Text>{spotifyT.title}</Text>
         {
           sLoading ? <Flex justify="center" align="center">
@@ -84,7 +85,7 @@ function PanelPage() {
             : sPlaylists.map(function(playlist)
             {
               return(
-                <Card key={playlist.id}>
+                <Card className="card" key={playlist.id}>
                   <Flex gap="3" align="center">
                     <Avatar
                       size="3"
@@ -93,7 +94,7 @@ function PanelPage() {
                       fallback="T"
                     />
                     <Box>
-                    <SelectPlaylist which={true} title={playlist.name} desc={playlist.description} />
+                    <SelectPlaylist link={"https://open.spotify.com/playlist/"+playlist.id} img={playlist.images[0].url} which={true} title={playlist.name} desc={playlist.description} />
                       <Text as="div" size="2" color="gray">
                         {playlist.description}
                       </Text>
@@ -104,7 +105,7 @@ function PanelPage() {
             })
           )
         }
-      </Box>
+      </Flex>
     </Grid>
   );
 }

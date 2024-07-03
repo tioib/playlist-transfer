@@ -1,21 +1,33 @@
 import { Grid, Box, Flex, Text, TextField, Spinner, Card, Avatar, Link, Button, Dialog } from "@radix-ui/themes";
-import { useState, useEffect, useTransition } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from 'react-i18next';
 import { getYoutubeTracks, getSpotifyTracks } from "../api/playlists";
 
 function SelectPlaylist(props)
 {
-    const t = useTransition().t("playlists");
+    const t = useTranslation().t("playlists");
 
     return(
         <div>
             <Dialog.Root>
                 <Dialog.Trigger>
-                    <Link href="#" size="3" weight="bold">{props.title}</Link>
+                    <Link style={{textOverflow: "ellipsis"}} href="#" size="3" weight="bold">{props.title}</Link>
                 </Dialog.Trigger>
 
                 <Dialog.Content maxWidth="450px">
-                    <Dialog.Title>{props.title}</Dialog.Title>
+                    <Dialog.Title>
+                        <Link href={props.link} target="_blank">
+                            <Flex align="center" gap="3">
+                                <Avatar
+                                size="3"
+                                src={props.img}
+                                radius="none"
+                                fallback="T"
+                                />
+                                {props.title}
+                            </Flex>
+                        </Link>
+                    </Dialog.Title>
                     <Dialog.Description size="2" mb="4">
                         {props.which ? t.which.youtube : t.which.spotify}
                     </Dialog.Description>
